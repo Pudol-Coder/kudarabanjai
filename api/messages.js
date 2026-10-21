@@ -116,6 +116,6 @@ export async function POST(request) {
     return json({ ok: true, message: { id: item.id, type, name, message, createdAt: item.createdAt } }, 201);
   } catch (error) {
     console.error('POST /api/messages failed:', error);
-    return json({ error: '메시지를 저장하지 못했어요. Vercel Blob 환경 변수를 확인해 주세요.' }, 500);
+    return json({ error: '저장 실패: ' + (error?.message || String(error)) }, 500);
   }
 }
