@@ -28,7 +28,7 @@ export async function POST(request) {
       createdAt: new Date().toISOString()
     };
     await put(`community/reports/${report.createdAt.replace(/[:.]/g, '-')}-${report.id}.json`, JSON.stringify(report), {
-      access: 'public',
+      access: 'private',
       contentType: 'application/json',
       addRandomSuffix: false,
       allowOverwrite: false

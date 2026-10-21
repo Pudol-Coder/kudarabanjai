@@ -1,4 +1,4 @@
-import { put, list } from '@vercel/blob';
+import { put, list, get } from '@vercel/blob';
 import { randomUUID } from 'node:crypto';
 
 const MAX_FEEDBACK = 120;
@@ -47,17 +47,15 @@ async function getMessages(type, limit) {
   try {
     const prefix = `community/${type}/`;
     
-    // 💡 [수정 완료] 여기서 수동 token 지정 부분을 완전히 지워 자동 OIDC를 활성화합니다.
     const result = await list({ prefix, limit: 1000 });
     
     const blobs = result.blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)).slice(0, limit);
     const messages = await Promise.all(blobs.map(async blob => {
       try {
-        // private 스토어 상태라면 일반 fetch 시 403 에러가 납니다. 
-        // 보안 인증 정보가 실려 갈 수 있도록 수동 처리를 하거나, 버킷 세팅과 맞추어야 합니다.
-        const response = await fetch(blob.url, { cache: 'no-store' });
-        if (!response.ok) return null;
-        const item = await response.json();
+        // private 스토어는 인증이 필요하므로 일반 fetch 대신 SDK의 get()으로 읽습니다.
+        const result = await get(blob.pathname, { access: 'private', useCache: false });
+        if (!result || result.statusCode !== 200 || !result.stream) return null;
+        const item = await new Response(result.stream).json();
         return {
           id: String(item.id || ''),
           type,
@@ -70,8 +68,8 @@ async function getMessages(type, limit) {
     return messages.filter(item => item && item.name && item.message)
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   } catch (err) {
-    console.error("List Error:", err);
-    return [];
+    console.error('List Error:', err);
+    throw err;
   }
 }
 
@@ -116,6 +114,6 @@ export async function POST(request) {
     return json({ ok: true, message: { id: item.id, type, name, message, createdAt: item.createdAt } }, 201);
   } catch (error) {
     console.error('POST /api/messages failed:', error);
-    return json({ error: '메시지를 저장하지 못했어요. Vercel Blob 환경 변수를 확인해 주세요.' }, 500);
+    return json({ error: '메시지를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.' }, 500);
   }
 }
