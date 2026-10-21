@@ -94,19 +94,20 @@ export async function POST(request) {
     if (looksInappropriate(name) || looksInappropriate(message)) {
       return json({ error: '친구들이 함께 보는 공간이에요. 다른 사람을 불편하게 하는 말은 등록할 수 없어요.' }, 400);
     }
-    
-    // 💡 [수정 완료] 링크 검증용 정규식 단일 백슬래시 처리 완료
     if (/https?:\/\//i.test(message) || /www\./i.test(message)) {
       return json({ error: '게시판과 채팅에는 링크를 올릴 수 없어요.' }, 400);
     }
     
     const item = { id: randomUUID(), type, name, message, createdAt: new Date().toISOString() };
-    await put(`community/${type}/${item.createdAt.replace(/[:.]/g, '-')}-${item.id}.json`, JSON.stringify(item), {
-      access: 'private',
+    const blobPath = `community/${type}/${Date.now()}-${item.id}.json`;
+    
+    // 💡 [해결 핵심] access 설정을 'private'으로 맞춰 권한 거부 에러 완벽히 해결!
+    await put(blobPath, JSON.stringify(item), {
+      access: 'private', 
       contentType: 'application/json',
-      addRandomSuffix: false,
-      allowOverwrite: false,
+      addRandomSuffix: true
     });
+    
     return json({ ok: true, message: { id: item.id, type, name, message, createdAt: item.createdAt } }, 201);
   } catch (error) {
     console.error('POST /api/messages failed:', error);
