@@ -7,4 +7,12 @@
     "label": "HANJA BATTLE",
     "symbol": "韓"
   }
+  {
+    "title": "한자 미니게임즈 (원본)",
+    "version": "원본 선공개",
+    "description": "한자 미니게임즈입니다 (한자타자연습, AI대결, 박쌤의 한문교실 3가지 게임 포함)",
+    "file": "/games/HanjaMinigames-SneakPeek/HanjaMinigames-SneakPeek.zip",
+    "label": "HANJA MINIGAMES",
+    "symbol": "韓"
+  }
 ]
