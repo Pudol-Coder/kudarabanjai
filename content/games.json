@@ -1,9 +1,9 @@
 [
   {
-    "title": "한자배틀 (원본)",
-    "version": "원본",
-    "description": "한자배틀 원본입니다",
-    "file": "/games/Hanja-Battle/초기버전.html",
+    "title": "한자배틀 (원본, 선생님 수정안)",
+    "version": "원본, 선생님 수정안",
+    "description": "한자배틀입니다",
+    "file": "/games/Hanja-Battle/HanjaBattle.zip",
     "label": "HANJA BATTLE",
     "symbol": "韓"
   }
