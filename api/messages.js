@@ -82,7 +82,7 @@ export async function GET(request) {
     return json({ messages });
   } catch (error) {
     console.error('GET /api/messages failed:', error);
-    return json({ error: '메시지를 불러오지 못했어요. Vercel Blob 설정을 확인해 주세요.' }, 500);
+    return json({ error: '저장 실패: ' + (error?.message || String(error)) }, 500);
   }
 }
 
@@ -114,6 +114,10 @@ export async function POST(request) {
     return json({ ok: true, message: { id: item.id, type, name, message, createdAt: item.createdAt } }, 201);
   } catch (error) {
     console.error('POST /api/messages failed:', error);
+<<<<<<< HEAD
     return json({ error: '메시지를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.' }, 500);
+=======
+    return json({ error: '저장 실패: ' + (error?.message || String(error)) }, 500);
+>>>>>>> 3cb6ac9be6c6a8d3c89e9687d3afc9cfb0bd5f69
   }
 }
