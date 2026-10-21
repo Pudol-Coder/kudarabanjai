@@ -45,7 +45,11 @@ function checkRateLimit(request) {
 }
 async function getMessages(type, limit) {
   const prefix = `community/${type}/`;
-  const result = await list({ prefix, limit: 1000 });
+  const result = await list({ 
+    prefix, 
+    limit: 1000, 
+    token: process.env.BLOB_READ_WRITE_TOKEN 
+  });
   const blobs = result.blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)).slice(0, limit);
   const messages = await Promise.all(blobs.map(async blob => {
     try {
@@ -101,7 +105,8 @@ export async function POST(request) {
       access: 'public',
       contentType: 'application/json',
       addRandomSuffix: false,
-      allowOverwrite: false
+      allowOverwrite: false,
+      token: process.env.BLOB_READ_WRITE_TOKEN //여기도 안전하게 매개변수 전달!
     });
     return json({ ok: true, message: { id: item.id, type, name, message, createdAt: item.createdAt } }, 201);
   } catch (error) {
