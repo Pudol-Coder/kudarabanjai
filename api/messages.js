@@ -102,11 +102,10 @@ export async function POST(request) {
     
     const item = { id: randomUUID(), type, name, message, createdAt: new Date().toISOString() };
     await put(`community/${type}/${item.createdAt.replace(/[:.]/g, '-')}-${item.id}.json`, JSON.stringify(item), {
-      access: 'public',
+      access: 'private',
       contentType: 'application/json',
       addRandomSuffix: false,
       allowOverwrite: false,
-      token: process.env.BLOB_READ_WRITE_TOKEN //여기도 안전하게 매개변수 전달!
     });
     return json({ ok: true, message: { id: item.id, type, name, message, createdAt: item.createdAt } }, 201);
   } catch (error) {
