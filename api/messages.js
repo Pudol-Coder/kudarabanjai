@@ -84,7 +84,7 @@ export async function GET(request) {
     return json({ messages });
   } catch (error) {
     console.error('GET /api/messages failed:', error);
-    return json({ error: '메시지를 불러오지 못했어요. Vercel Blob 설정을 확인해 주세요.' }, 500);
+    return json({ error: '저장 실패: ' + (error?.message || String(error)) }, 500);
   }
 }
 
