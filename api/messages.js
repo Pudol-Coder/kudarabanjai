@@ -21,6 +21,14 @@ function cleanText(value, max) {
   if (typeof value !== 'string') return '';
   return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, max);
 }
+// Basic automatic moderation for a student-facing public board.
+const BLOCKED_PATTERNS = [
+  /시\\s*발/, /씨\\s*발/, /병\\s*신/, /ㅅ\\s*ㅂ/, /개\\s*새\\s*끼/,
+  /죽어/, /꺼져/, /좆/, /보\\s*지/, /섹\\s*스/, /자\\s*살/
+];
+function looksInappropriate(text) {
+  return BLOCKED_PATTERNS.some(pattern => pattern.test(text));
+}
 function checkRateLimit(request) {
   // Best-effort per-instance throttle. For stronger protection, add a persistent rate limiter/WAF.
   const key = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -78,6 +86,13 @@ export async function POST(request) {
     const name = cleanText(body.name, 24);
     const message = cleanText(body.message, type === 'chat' ? 300 : 1200);
     if (name.length < 1 || message.length < 1) return json({ error: '닉네임과 메시지를 입력해 주세요.' }, 400);
+    if (looksInappropriate(name) || looksInappropriate(message)) {
+      return json({ error: '친구들이 함께 보는 공간이에요. 다른 사람을 불편하게 하는 말은 등록할 수 없어요.' }, 400);
+    }
+    // Don't accept URLs in public posts to reduce spam and unsafe links.
+    if (/https?:\\/\\//i.test(message) || /www\\./i.test(message)) {
+      return json({ error: '게시판과 채팅에는 링크를 올릴 수 없어요.' }, 400);
+    }
     const item = { id: randomUUID(), type, name, message, createdAt: new Date().toISOString() };
     await put(`community/${type}/${item.createdAt.replace(/[:.]/g, '-')}-${item.id}.json`, JSON.stringify(item), {
       access: 'public',

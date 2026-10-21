@@ -34,7 +34,7 @@ function renderFeedback(items) {
     root.innerHTML = '<p class="empty-state">아직 의견이 없어요. 첫 의견을 남겨 주세요!</p>';
     return;
   }
-  root.innerHTML = items.map(item => `<article class="message-item"><div class="message-item-top"><strong>${escapeHTML(item.name)}</strong><time>${escapeHTML(safeDate(item.createdAt))}</time></div><p>${escapeHTML(item.message)}</p></article>`).join('');
+  root.innerHTML = items.map(item => `<article class="message-item"><div class="message-item-top"><strong>${escapeHTML(item.name)}</strong><span><time>${escapeHTML(safeDate(item.createdAt))}</time> <button class="report-button" type="button" data-report-type="feedback" data-report-id="${escapeHTML(item.id)}">신고</button></span></div><p>${escapeHTML(item.message)}</p></article>`).join('');
 }
 function renderChat(items) {
   const root = $('#chatList');
@@ -46,7 +46,7 @@ function renderChat(items) {
   const myName = $('#chatName').value.trim();
   root.innerHTML = items.map(item => {
     const mine = myName && item.name === myName;
-    return `<article class="chat-bubble ${mine ? 'mine' : ''}"><div class="chat-meta"><strong>${escapeHTML(item.name)}</strong><time>${escapeHTML(safeDate(item.createdAt))}</time></div><div class="chat-content">${escapeHTML(item.message)}</div></article>`;
+    return `<article class="chat-bubble ${mine ? 'mine' : ''}"><div class="chat-meta"><strong>${escapeHTML(item.name)}</strong><time>${escapeHTML(safeDate(item.createdAt))}</time><button class="report-button" type="button" data-report-type="chat" data-report-id="${escapeHTML(item.id)}" aria-label="메시지 신고">신고</button></div><div class="chat-content">${escapeHTML(item.message)}</div></article>`;
   }).join('');
   if (wasNearBottom) root.scrollTop = root.scrollHeight;
 }
@@ -104,6 +104,23 @@ $('#chatForm').addEventListener('submit', async event => {
   } finally { button.disabled = false; }
 });
 $('#refreshFeedback').addEventListener('click', loadFeedback);
+
+
+document.addEventListener('click', async event => {
+  const button = event.target.closest('[data-report-id]');
+  if (!button) return;
+  const reason = prompt('어떤 점이 부적절한가요? 신고 이유를 적어 주세요.');
+  if (!reason || !reason.trim()) return;
+  button.disabled = true;
+  try {
+    await api('/api/report', {method:'POST', body:JSON.stringify({
+      type: button.dataset.reportType, id: button.dataset.reportId, reason: reason.trim()
+    })});
+    alert('신고가 접수됐어요. 운영자가 확인할 수 있도록 저장했습니다.');
+  } catch (error) {
+    alert(error.message);
+  } finally { button.disabled = false; }
+});
 
 // Static content is deliberately managed as JSON so adding games/devlogs doesn't require editing HTML.
 async function loadContent() {
